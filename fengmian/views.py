@@ -16,7 +16,7 @@ def get_number(request):
     从数据库取数据，判断记录ip是否存，如果存在，时间是否超过14小时，如果不存在，则返回序列号
     
     '''
-    give_over = '今天的赠送名额领完了'
+    give_over = '今天的赠送名额领完了,明天再来吧'
     ip = md5(get_ip(request).encode(encoding='utf8')).hexdigest()
     data = get_record()
     xuliehaos = get_xuliehao() or give_over
@@ -77,7 +77,6 @@ def get_xuliehao():
     return xuliehao
 
 def update_xuliehao(txt):
-    print(txt)
     with open('uploads/xuliehao.txt','w',encoding='utf8') as f:
         f.write(txt)
 
