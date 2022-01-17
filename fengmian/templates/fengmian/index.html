@@ -1,0 +1,54 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>红包封面序列号领取</title>
+    <style>
+        body {
+            margin: 0;
+            background-image: linear-gradient( 135deg, #FAD7A1 10%, #E96D71 100%);
+            color: #888;
+        }
+        table {
+            width: 100%;
+        }
+        table tr:nth-child(odd){
+            background-color: #F5FAFA;
+        }
+        .xuliehao {
+            color: brown;
+            display: block;
+            width: 100%;
+            background-color: bisque;
+            text-align: center;
+            padding-top: 8px;
+            padding-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <p>你的红包序列号是：
+        <span class="xuliehao">{{ xuliehao }}</span>
+    </p>
+    <p>安全码：<span style="color: brown;">{{ ip }}</span></p>
+    <p>已领取总数：
+        <span style="color: brown;">{{ presented_total }}</span>
+         显示最新<span style="color: brown;">10</span>条记录
+    </p>
+    <table style="text-align: center;">
+        <tr>
+            <th>序列号</th>
+            <th>领取时间</th>
+        </tr>
+    {% for item in presented %}
+        <tr>
+            <td>{{ item.name }}</td>
+            <td>{{ item.time }}</td>
+        </tr>
+    {% endfor %}
+    </table>
+</body>
+</html>

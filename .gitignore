@@ -1,0 +1,7 @@
+
+migrations/*
+*.rar
+*.sqlite3
+*.xls
+
+
