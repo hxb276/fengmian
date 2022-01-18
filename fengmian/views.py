@@ -17,12 +17,28 @@ def get_number(request):
     
     '''
     give_over = '今天的赠送名额领完了,明天再来吧'
-    ip = md5(get_ip(request).encode(encoding='utf8')).hexdigest()
+    today = time.strftime('%m%d',time.localtime())
+    ip = get_ip(request)
+    encrypted_ip = md5(ip.encode(encoding='utf8')).hexdigest()
     data = get_record()
     xuliehaos = get_xuliehao() or give_over
-    presented = get_presented()
-    show_presented = presented[::-1][:10]
-    presented_total = len(presented) if len(presented) < 9 else len(presented) + 40
+    presented = get_presented(today)
+    all_presented =  []
+    for item in list(presented.values()):
+        all_presented += item
+    show_presented = all_presented[::-1][:10]
+    # 已领取总数量 
+    presented_total = len(all_presented) if len(all_presented) < 10 else len(all_presented) + 40
+    # 每天限量9个，领完不在返回序列号
+    if not presented or xuliehaos == give_over or presented.get(today,None) and len(presented[today]) == 10:
+        xuliehao = give_over
+        return render(request,'fengmian/index.html',{
+                'xuliehao':xuliehao,
+                'ip':encrypted_ip,
+                'presented':show_presented,
+                'presented_total':presented_total
+                })
+    
     current_time = datetime.datetime.now()
     if data:
         for i,item in enumerate(data):
@@ -31,28 +47,26 @@ def get_number(request):
             # ip相同，间隔时间超8小时
             if ip == old_ip and time.time() - times < 2:
                 xuliehao = f'时间间隔太短了哦 上次提取时间:\n {time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(times))}'
-            elif ip == old_ip:
+            # 新老用户一视同仁
+            else:
                 xuliehao = xuliehaos.split(',').pop(0)
                 data[i].update({'time':time.time()})
                 update_userinfo(data)
-                if xuliehao != give_over:
-                    presented.append({'name':xuliehao,'time':current_time.strftime('%Y-%m-%d %H:%M:%S')})
-                    update_presented(presented)
-            else:
-                xuliehao = xuliehaos.split(',').pop(0)
-                data.append({'ip':ip,'time':time.time()})
-                update_userinfo(data)
-                if xuliehao != give_over:
-                    presented.append({'name':xuliehao,'time':current_time.strftime('%Y-%m-%d %H:%M:%S')})
-                    update_presented(presented)
+                # 今天是否有领取记录，有则直接append 否则创建时间键today
+                if presented.get(today,None):
+                    presented[today].append({'name':xuliehao,'time':current_time.strftime('%Y-%m-%d %H:%M:%S')})
+                else:
+                    presented[today] = {'name':xuliehao,'time':current_time.strftime('%Y-%m-%d %H:%M:%S')}
+                update_presented(presented)
+
     else:
+        # 程序第一次执行 所有数据为空
         data = []
         xuliehao = xuliehaos.split(',').pop(0)
         data.append({'ip':ip,'time':time.time()})
         update_userinfo(data)
-        if xuliehao != give_over:
-            presented.append({'name':xuliehao,'time':current_time.strftime('%Y-%m-%d %H:%M:%S')})
-            update_presented(presented)
+        presented[today] = [{'name':xuliehao,'time':current_time.strftime('%Y-%m-%d %H:%M:%S')}]
+        update_presented(presented)
 
     replace_str = xuliehao+',' 
     if len(xuliehaos.split(',')) > 1:
@@ -61,7 +75,7 @@ def get_number(request):
         new_xuliehaos = ''
     update_xuliehao(new_xuliehaos)
 
-    return render(request,'fengmian/index.html',{'xuliehao':xuliehao,'ip':ip,'presented':show_presented,'presented_total':presented_total})
+    return render(request,'fengmian/index.html',{'xuliehao':xuliehao,'ip':encrypted_ip,'presented':show_presented,'presented_total':presented_total})
 
 def get_ip(request):
     if request.META.get('HTTP_X_FORWARDED_FOR'):
@@ -97,17 +111,24 @@ def update_userinfo(info):
         infos = json.dumps(info)
         f.write(infos)
 
-def get_presented():
+def get_presented(today):
+    '''
+    :today: 日期字符串
+    '''
+    default_values = dict({today:[]})
     path = Path(MEDIA_ROOT / 'presented.json')
     if not path.is_file():
         with open(path,'w',encoding='utf8') as f:
-            f.write('')
-        return []
+            f.write(json.dumps(default_values))
+        return default_values
     with open(path,'r',encoding='utf8') as f:
         data = f.read()
-        data = json.loads(data) if data else []
+        if data:
+            data = json.loads(data)
+        else:
+            data = default_values
     return data
-def update_presented(data:list()):
+def update_presented(data:dict()):
     path = Path(MEDIA_ROOT / 'presented.json')
     with open(path,'w',encoding='utf8') as f:
         f.write(json.dumps(data))
