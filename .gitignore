@@ -6,5 +6,6 @@ migrations/*
 *.xls
 *.sh
 *.ini
+Dockerfile
 
 
