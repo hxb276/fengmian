@@ -49,27 +49,27 @@ def get_number(request):
                 xuliehao = f'时间间隔太短了哦 上次提取时间:\n {time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(times))}'
             # 新老用户一视同仁
             else:
-                xuliehao = xuliehaos.split(',').pop(0)
+                xuliehao = xuliehaos.split('\n').pop(0)
                 data[i].update({'time':time.time()})
                 update_userinfo(data)
                 # 今天是否有领取记录，有则直接append 否则创建时间键today
                 if presented.get(today,None):
                     presented[today].append({'name':xuliehao,'time':current_time.strftime('%Y-%m-%d %H:%M:%S')})
                 else:
-                    presented[today] = {'name':xuliehao,'time':current_time.strftime('%Y-%m-%d %H:%M:%S')}
+                    presented[today] = [{'name':xuliehao,'time':current_time.strftime('%Y-%m-%d %H:%M:%S')}]
                 update_presented(presented)
 
     else:
         # 程序第一次执行 所有数据为空
         data = []
-        xuliehao = xuliehaos.split(',').pop(0)
+        xuliehao = xuliehaos.split('\n').pop(0)
         data.append({'ip':ip,'time':time.time()})
         update_userinfo(data)
         presented[today] = [{'name':xuliehao,'time':current_time.strftime('%Y-%m-%d %H:%M:%S')}]
         update_presented(presented)
 
-    replace_str = xuliehao+',' 
-    if len(xuliehaos.split(',')) > 1:
+    replace_str = xuliehao+'\n' 
+    if len(xuliehaos.split('\n')) > 1:
         new_xuliehaos = xuliehaos.replace(replace_str,'')
     else:
         new_xuliehaos = ''
