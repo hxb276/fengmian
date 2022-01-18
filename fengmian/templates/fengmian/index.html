@@ -59,7 +59,7 @@
         </tr>
     {% endfor %}
     </table>
-    {% if xuliehao == '今天的赠送名额领完了,明天再来吧' %}
+    {% if xuliehao == '今天的赠送名额领完了,明天再来吧' or '时间间隔太短了哦' in xuliehao %}
     <div class="wd_img">
         <img src="{% static 'img/wd_qr.jpg' %}" width="50%"/>
     </div>

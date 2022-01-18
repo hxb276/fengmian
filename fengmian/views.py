@@ -45,7 +45,7 @@ def get_number(request):
             old_ip = item['ip']
             times = item['time']
             # ip相同，间隔时间超8小时
-            if ip == old_ip and time.time() - times < 2:
+            if ip == old_ip and time.time() - times < 28800:
                 xuliehao = f'时间间隔太短了哦 上次提取时间:\n {time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(times))}'
             # 新老用户一视同仁
             else:
