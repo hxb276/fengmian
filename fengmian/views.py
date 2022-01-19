@@ -30,7 +30,7 @@ def get_number(request):
     # 已领取总数量 
     presented_total = len(all_presented) if len(all_presented) < 10 else len(all_presented) + 40
     # 每天限量9个，领完不在返回序列号
-    if not presented or xuliehaos == give_over or presented.get(today,None) and len(presented[today]) == 10:
+    if not presented or xuliehaos == give_over or presented.get(today,None) and len(presented[today]) == 20:
         xuliehao = give_over
         return render(request,'fengmian/index.html',{
                 'xuliehao':xuliehao,
@@ -41,16 +41,16 @@ def get_number(request):
     
     current_time = datetime.datetime.now()
     if data:
-        for i,item in enumerate(data):
-            old_ip = item['ip']
-            times = item['time']
+        # 数据结构：{'127.':time}
+        if ip in data:
+            times = data[ip]
             # ip相同，间隔时间超8小时
-            if ip == old_ip and time.time() - times < 28800:
+            if data[ip] - times < 28800:
                 xuliehao = f'时间间隔太短了哦 上次提取时间:\n {time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(times))}'
             # 新老用户一视同仁
             else:
                 xuliehao = xuliehaos.split('\n').pop(0)
-                data[i].update({'time':time.time()})
+                data[ip] = time.time()
                 update_userinfo(data)
                 # 今天是否有领取记录，有则直接append 否则创建时间键today
                 if presented.get(today,None):
@@ -61,9 +61,9 @@ def get_number(request):
 
     else:
         # 程序第一次执行 所有数据为空
-        data = []
+        data = dict()
         xuliehao = xuliehaos.split('\n').pop(0)
-        data.append({'ip':ip,'time':time.time()})
+        data.update({str(ip):time.time()})
         update_userinfo(data)
         presented[today] = [{'name':xuliehao,'time':current_time.strftime('%Y-%m-%d %H:%M:%S')}]
         update_presented(presented)
@@ -94,7 +94,7 @@ def update_xuliehao(txt):
     with open('uploads/xuliehao.txt','w',encoding='utf8') as f:
         f.write(txt)
 
-def get_record(info=[]):
+def get_record(info=dict()):
     path = Path(MEDIA_ROOT / 'userinfo.json')
     if not path.is_file():
         return info
@@ -102,7 +102,7 @@ def get_record(info=[]):
         with open(path,'r',encoding='utf8') as f:
             data = f.read()
 
-    return json.loads(data) if data else info
+    return json.loads(data) if data else dict()
 
 def update_userinfo(info):
     path = Path(MEDIA_ROOT / 'userinfo.json')
