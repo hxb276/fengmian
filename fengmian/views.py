@@ -62,7 +62,8 @@ def get_number(request):
         
         else:
             xuliehao = xuliehaos.split('\n').pop(0)
-            update_userinfo({str(ip):time.time()})
+            data.update({str(ip):time.time()})
+            update_userinfo(data)
             # 今天是否有领取记录，有则直接append 否则创建时间键today
             if presented.get(today,None):
                 presented[today].append({'name':xuliehao,'time':current_time.strftime('%Y-%m-%d %H:%M:%S')})
