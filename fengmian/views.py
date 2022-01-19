@@ -45,7 +45,8 @@ def get_number(request):
         if ip in data:
             times = data[ip]
             # ip相同，间隔时间超8小时
-            if data[ip] - times < 28800:
+            if time.time() - times < 2:
+                print(times)
                 xuliehao = f'时间间隔太短了哦 上次提取时间:\n {time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(times))}'
             # 新老用户一视同仁
             else:
@@ -58,6 +59,16 @@ def get_number(request):
                 else:
                     presented[today] = [{'name':xuliehao,'time':current_time.strftime('%Y-%m-%d %H:%M:%S')}]
                 update_presented(presented)
+        
+        else:
+            xuliehao = xuliehaos.split('\n').pop(0)
+            update_userinfo({str(ip):time.time()})
+            # 今天是否有领取记录，有则直接append 否则创建时间键today
+            if presented.get(today,None):
+                presented[today].append({'name':xuliehao,'time':current_time.strftime('%Y-%m-%d %H:%M:%S')})
+            else:
+                presented[today] = [{'name':xuliehao,'time':current_time.strftime('%Y-%m-%d %H:%M:%S')}]
+            update_presented(presented)
 
     else:
         # 程序第一次执行 所有数据为空
