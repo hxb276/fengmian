@@ -20,6 +20,6 @@ from django.conf.urls.static import static
 from fengmian import views
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path(r'fengmian/',views.get_number,name='index')
+    path(r'fengmian/',views.IndexView.as_view(),name='index')
 
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

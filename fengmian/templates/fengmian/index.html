@@ -44,7 +44,7 @@
     </p>
     <p class="bg-opacity">安全码：<span style="color: brown;">{{ ip }}</span></p>
     <p class="bg-opacity">已领取总数：
-        <span style="color: brown;">{{ presented_total }}</span>
+        <span style="color: brown;">{{ all_received_nums }}</span>
          显示最新<span style="color: brown;">10</span>条记录
     </p>
     <table class="bg-opacity">
@@ -52,10 +52,10 @@
             <th>序列号</th>
             <th>领取时间</th>
         </tr>
-    {% for item in presented %}
+    {% for item in show_10 %}
         <tr>
-            <td>{{ item.name }}</td>
-            <td>{{ item.time }}</td>
+            <td>{{ item.xuliehao }}</td>
+            <td>{{ item.access_time }}</td>
         </tr>
     {% endfor %}
     </table>

@@ -1,11 +1,10 @@
-fengmian/__pycache__
-fengmianapi/__pycache__
 migrations/*
 *.rar
 *.sqlite3
 *.xls
 *.sh
 *.ini
+*.pyc
 Dockerfile
 
 
