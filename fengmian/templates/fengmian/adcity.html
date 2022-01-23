@@ -30,11 +30,16 @@
             font-size: 2rem;
         }
         footer {
-            position: absolute;
+            position: fixed;
+            right: .5rem;
             bottom: .5rem;
             color: #aaa;
             text-align: center;
+            opacity: .5;
         }
+        /* footer > span {
+            display: block;
+        } */
         .container {
             text-align: center;
             height:100%;
@@ -67,7 +72,13 @@
         <div class="img">
             <img src="{% static 'img/wd_qr.jpg' %}",width=50% />
         </div>
-        <footer>visitors:{{v}}</footer>
+        <footer>
+            <span>vs: {{vs}}</span>
+            <span>cvs: {{cvs}}</span>
+            <span>wcvs:{{ wcvs }} </span>
+            <span>tp:{{ tpay }} </span>
+            <span>c2wp:{{ city2wdper }}</span>
+        </footer>
     </div>
 </body>
 </html>
