@@ -1,0 +1,72 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>微信红包封面平价超市</title>
+    <style>
+        body {
+            background-image: linear-gradient(0deg, #FFDEE9 0%, #B5FFFC 100%);
+        }
+        h2 {
+            background-color: blueviolet;
+            color: gold;
+            padding: 8px;
+        }
+        h2 > p {
+            margin-top: 8px;
+            margin-bottom: 8px;
+        }
+        h2 > p > span {
+            display: inline-block;
+            border-radius: 50%;
+            background-color: yellowgreen;
+            color: #f00;
+            width: 2rem;
+            height: 2rem;
+            line-height: 1;
+            font-size: 2rem;
+        }
+        footer {
+            position: absolute;
+            bottom: .5rem;
+            color: #aaa;
+            text-align: center;
+        }
+        .container {
+            text-align: center;
+            height:100%;
+        }
+        .tips {
+            font-size: 1.4rem;
+            background-image: linear-gradient(135deg, #FAD7A1 10%, #E96D71 100%);
+            padding-top: .5rem;
+            padding-bottom: .5rem;
+        }
+        .tips span {
+            display: inline-block;
+            padding-top: .5rem;
+            padding-bottom: .5rem;
+            font-size: 1rem;
+            color: #fff;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>嗨!上千款微信红包封面
+            <p>最低仅需<span>4</span>毛钱</p>
+        </h2>
+        <p class="tips">微店小程序购买更方便
+            <span>截图保存程序码到手机，打开微信扫一扫，还可以添加到常用小程序哦</span>
+        </p>
+        <div class="img">
+            <img src="{% static 'img/wd_qr.jpg' %}",width=50% />
+        </div>
+        <footer>visitors:{{v}}</footer>
+    </div>
+</body>
+</html>

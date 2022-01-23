@@ -12,7 +12,8 @@ from hashlib import md5
 from django.shortcuts import render
 from django.views.generic import View
 
-from fengmian.models import MyUser
+from fengmian.models import MyUser,AdCity
+from fengmian.utils import get_ip
 # Create your views here.
 
 class IndexView(View):
@@ -26,7 +27,7 @@ class IndexView(View):
         self.__create_false_data()
 
     def get(self,request):
-        ip = self._get_ip(request)
+        ip = get_ip(request)
         encrypted_ip = md5(ip.encode(encoding='utf8')).hexdigest()
         all_user = MyUser.objects.all().order_by('-access_time')
         all_received_nums = all_user.count()
@@ -65,14 +66,6 @@ class IndexView(View):
 
         context['xuliehao'] = xuliehao
         return render(request,'fengmian/index.html',context)
-    
-    def _get_ip(self,request):
-        if request.META.get('HTTP_X_FORWARDED_FOR'):
-            ip = request.META.get("HTTP_X_FORWARDED_FOR")
-        else:
-            ip = request.META.get("REMOTE_ADDR")
-        
-        return ip
 
     def _get_xuliehao(self):
         with open('uploads/xuliehao.txt','r',encoding='utf8') as f:
@@ -100,3 +93,17 @@ class IndexView(View):
             # new_data_str = '\n'.join(list(new_data))
             # self._update_xuliehao(new_data_str)
         # MyUser.objects.all().delete() 
+
+class AdCityView(View):
+
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+
+    def get(self,request):
+        ''''''
+        ip = get_ip(request)
+        
+        AdCity.objects.get_or_create(ip=ip)
+        visitors = AdCity.objects.all().count()
+
+        return render(request,'fengmian/adcity.html',{'v':visitors})

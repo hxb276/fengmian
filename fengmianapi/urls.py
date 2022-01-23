@@ -18,8 +18,10 @@ from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 from fengmian import views
+from fengmian.views import AdCityView
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path(r'fengmian/',views.IndexView.as_view(),name='index')
+    path(r'fengmian/',views.IndexView.as_view(),name='index'),
+    path(r'cityad/',AdCityView.as_view(),name='ad')
 
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
