@@ -7,3 +7,7 @@ def get_ip(request):
         ip = request.META.get("REMOTE_ADDR")
     
     return ip
+
+def get_ua(request):
+    ua = request.META.get('HTTP_USER_AGENT')
+    return ua or 0

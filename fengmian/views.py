@@ -8,14 +8,18 @@ import json
 import time
 import datetime
 from hashlib import md5
+import re
+import urllib
+from django import views
 
+from django.http import HttpResponse,HttpResponseRedirect,JsonResponse,HttpResponseForbidden
 from django.shortcuts import render
 from django.views.generic import View
 
 import requests
 
 from fengmian.models import MyUser,AdCity
-from fengmian.utils import get_ip
+from fengmian.utils import get_ip,get_ua
 # Create your views here.
 
 class IndexView(View):
@@ -105,6 +109,7 @@ class AdCityView(View):
     def get(self,request):
         ''''''
         ip = get_ip(request)
+        print(request.headers)
         
         today_ip = AdCity.objects.filter(ip=ip,access_time__day=self.day)
         if not today_ip:
@@ -115,7 +120,7 @@ class AdCityView(View):
         current_visitors = all_visitors.filter(access_time__day=self.day).count()
         wd_visitors, today_pay = self.get_wd_visitors()
         city2wdper = int(wd_visitors) / int(current_visitors)
-        
+
         context = {
             'vs':visitors,
             'cvs':current_visitors,
@@ -123,7 +128,8 @@ class AdCityView(View):
             'tpay':today_pay,
             'city2wdper': round(city2wdper,2)
             }
-        return render(request,'fengmian/adcity.html',context)
+        # return render(request,'fengmian/adcity.html',context)
+        return HttpResponseRedirect('http://fm666.hsenzy.com/')
 
 
     def get_wd_visitors(self):
@@ -150,6 +156,123 @@ class AdCityView(View):
         else:
             return 0,0
 
+class PddVideoview(View):
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+
+    def get(self,request):
+        
+        if request.headers.get('Content-Type',None) == 'application/json':
+            url = request.GET.get('ou',None)
+            qq_number = request.GET.get('qid',None)
+
+            if url:
+                url_ok = self.__verity_url(url)
+                if not url_ok:
+                    return JsonResponse({'code':-1,'msg':'params err'})
+                video_info = self.__get_video_url(url)
+                return JsonResponse(video_info,safe=False)
+            # 第一次验证qq号
+            elif qq_number:
+                ua = get_ua(request)
+                res = JsonResponse({'code':1,'msg':'success'})
+                res.set_signed_cookie('uid',str(qq_number),salt='ddsp')
+                res.set_signed_cookie('ua',ua,salt='ddsp')
+                return res
+            else:
+                return HttpResponseForbidden()
+        else:
+            print(request.META.get('QUERY_STRING',None))
+            ua = get_ua(request)
+            print(ua)
+            return render(request,'fengmian/pdd-video.html')
+
+
+    def __get_video_url(self,url):
+        headers = {
+        'Host':'mobile.yangkeduo.com',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1',
+        'User-Agent': 'Mozilla/5.0 (Linux; Android 9; MI 6 Build/PKQ1.190118.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/86.0.4240.99 XWEB/3185 MMWEBSDK/20211202 Mobile Safari/537.36 MMWEBID/9626 MicroMessenger/8.0.18.2060(0x28001251) Process/toolsmp WeChat/arm64 Weixin NetType/WIFI Language/zh_CN ABI/arm64',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/wxpic,image/tpg,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+        'X-Requested-With': 'com.tencent.mm',
+        'Sec-Fetch-Site': 'none',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-User': '?1',
+        'Sec-Fetch-Dest': 'document',
+        'Accept-Encoding': 'gzip, deflate',
+        'Accept-Language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Cookie': ''
+        }
+        params = {
+            'feed_id':'4265981489507747070',
+            'share_mall_id':'144905218',
+            'page_from':'602100',
+            'shared_time':'1643023430003',
+            'shared_sign':'ecdc802498800a94b733a3ade35a7ffe',
+            'goods_id':'312710602079',
+            'refer_share_id':'ce22a348bf864f599d9dcdf377f7cdf9',
+            'refer_share_uid':'4221292552',
+            'refer_share_uin':'OEOFS6VAD5SYUGPV26DJIS534M_GEXDA',
+            'refer_share_channel':'message',
+            'refer_share_form':'card'
+        }
+        # url = 'https://mobile.yangkeduo.com/proxy/api/api/hub/zb_promotions_scene/weak/list/get?pdduid=2608448966231 '
+        # url = 'https://mobile.yangkeduo.com/fyxmkief.html?feed_id=4265981489507747070&share_mall_id=144905218&page_from=602100&shared_time=1643023430003&shared_sign=ecdc802498800a94b733a3ade35a7ffe&goods_id=312710602079&refer_share_id=ce22a348bf864f599d9dcdf377f7cdf9&refer_share_uid=4221292552&refer_share_uin=OEOFS6VAD5SYUGPV26DJIS534M_GEXDA&refer_share_channel=message&refer_share_form=card'
+        res = requests.get(url=url,headers=headers,verify=False)
+        data = res.text
+
+        play_url = re.findall(r'play_url=(.*?)&',data)
+        first_frame_url = re.findall(r'"firstFrameUrl":"(.*?jpeg)',data)[1]
+        info = re.findall(r'<p .*?>(.*?)</p>',data)
+        print(info)
+        author = info[0]
+        likes = info[1]
+        comments = info[2]
+        v_url = urllib.parse.unquote(play_url[0])
+        img_url= first_frame_url.encode('utf8').decode('unicode-escape')
+
+        return [author,likes,comments,v_url,img_url]
+
+    def __verity_url(self,url):
+        '''
+        简单验证url是否合法
+        '''
+        return 'goods_id' in url.split('&')
+
+class FormatXuliehao(View):
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+
+    def get(self,request):
+
+        if request.headers['Content-Type'] == 'application/json':
+            fstr = request.GET.get('s',None)
+            if fstr:
+                
+                new_str = self.format_str(fstr)
+                if new_str:
+                    return JsonResponse({'code':1,'msg':'success','data':new_str})
+                else:
+                    return JsonResponse({'code':1,'msg':'success','data':'未知错误'})
+
+            else:
+                return JsonResponse({'code':-1,'msg':'err'})
+
+        return render(request,'fengmian/re.html')
+    
+    def format_str(self,s):
+        '''格式化字符串'''
+        new_str = ''
+        str_lst = s.split('\n')
+        for item in str_lst:
+            try:
+                s = re.search(r'[A-z0-9]+',item)[0] + '\n'
+            except:
+                continue
+            else:
+                new_str += s
+        return new_str
 
 if __name__ == '__main__':
     ad = AdCityView()

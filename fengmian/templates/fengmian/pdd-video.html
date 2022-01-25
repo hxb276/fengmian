@@ -1,0 +1,60 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parse PDD Video</title>
+    <style>
+        .tips-none {
+            display: none;
+        }
+        .color-red {
+            display: block;
+            color: #f00;
+            margin-top: .5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="continer">
+        <h2>多多视频解析</h2>
+        <p class="user">
+            <span class="uname"></span>
+            <span class="remain"> </span>
+        </p>
+        <p class="verity-user">
+            <input type="text" name="qid" id="qid">
+            <input type="button" value="提交" id="qsubmit">
+            <span class="tips-none "></span>
+        </p>
+        <div class="form">
+            <form action="" method="get">
+                {% csrf_token %}
+                <input type="text" name="ou" id="origin_url">
+                <input type="submit" value="解析" id="submit">
+            </form>
+        </div>
+        <div class="history">
+            <h3>最新数据</h3>
+            <table>
+                <tr>
+                    <th>1</th>
+                    <th>2</th>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <script src="{% static 'fengmian/js/jquery-3.3.1.min.js' %}"></script>
+    <script src="{% static 'fengmian/js/index.js' %}"></script>
+</body>
+</html>

@@ -1,0 +1,101 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Format str</title>
+    <style>
+        body {
+            background-image: linear-gradient(135deg, #FAD7A1 10%, #E96D71 100%);
+        }
+        .container {
+            text-align: center;
+        }
+        .btn {
+            text-align: center;
+            font-size: 1.4rem;
+            color: #fff;
+        }
+        .btn input {
+            width: 5rem;  
+            padding:.5rem;  
+            margin: 0 20px;
+            background-color: #428bca;  
+            border-color: #357ebd;  
+            color: #fff;  
+            -moz-border-radius: 10px;  
+            -webkit-border-radius: 10px;  
+            border-radius: 10px; /* future proofing */  
+            -khtml-border-radius: 10px; /* for old Konqueror browsers */  
+            text-align: center;  
+            vertical-align: middle;  
+            border: 1px solid transparent;
+            font-weight: 800;
+            font-size: 1.4rem;
+
+
+        }
+        .tips {
+            color: #f00;
+            text-align: center;
+        }
+        .text textarea {
+            width: 80%;
+            min-height: 30rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="btn">
+            <input type="button" value="整理" id="format">
+            <input type="button" value="复制" id="copy">
+        </div>
+        <p class="tips">请将序列号粘贴在下方...</p>
+        <div class="text">
+            <textarea id="texta"></textarea>
+        </div>
+    </div>
+    <script src="{% static 'fengmian/js/jquery-3.3.1.min.js' %}"></script>
+    <script>
+
+        $(function() {
+            let $copy = $('#copy'),
+                $format = $('#format'),
+                $texta = $('#texta'),
+                $tips = $('p.tips');
+
+            function copy() {
+                $texta.select();
+                document.execCommand("Copy");
+                $tips.text('复制成功')
+            };
+
+            $format.click(function() {
+                $.ajax({
+                    type:'get',
+                    url:'/xuliehao/',
+                    contentType:'application/json',
+                    dataType:'json',
+                    data:{s:$texta.val()},
+                    success: function(data) {
+                        $tips.text('格式化成功，请复制');
+                        $texta.val(data.data)
+                    },
+                    error: function(data) {
+                        $tips.text('未知错误');
+                    }
+                },
+                )
+            })
+
+            $copy.click(()=>{copy()});
+
+
+        })
+    </script>
+</body>
+</html>

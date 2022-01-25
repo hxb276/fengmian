@@ -22,6 +22,8 @@ from fengmian.views import AdCityView
 urlpatterns = [
     path('admin/', admin.site.urls),
     path(r'fengmian/',views.IndexView.as_view(),name='index'),
-    path(r'cityad/',AdCityView.as_view(),name='ad')
+    path(r'cityad/',AdCityView.as_view(),name='ad'),
+    path(r'pdd-video/',views.PddVideoview.as_view(),name='pdd'),
+    path(r'xuliehao/',views.FormatXuliehao.as_view(),name='format')
 
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

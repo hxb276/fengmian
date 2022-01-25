@@ -1,4 +1,5 @@
 migrations/*
+doc.md
 *.rar
 *.sqlite3
 *.xls
