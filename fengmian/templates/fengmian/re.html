@@ -53,6 +53,7 @@
         <div class="btn">
             <input type="button" value="整理" id="format">
             <input type="button" value="复制" id="copy">
+            <input type="button" value="导出txt" id="txt">
         </div>
         <p class="tips">请将序列号粘贴在下方...</p>
         <div class="text">
@@ -65,6 +66,7 @@
         $(function() {
             let $copy = $('#copy'),
                 $format = $('#format'),
+                $txt = $('#txt'),
                 $texta = $('#texta'),
                 $tips = $('p.tips');
 
@@ -84,6 +86,35 @@
                     success: function(data) {
                         $tips.text('格式化成功，请复制');
                         $texta.val(data.data)
+                    },
+                    error: function(data) {
+                        $tips.text('未知错误');
+                    }
+                },
+                )
+            })
+            $txt.click(function() {
+                $.ajax({
+                    type:'get',
+                    url:'/xuliehao/',
+                    contentType:'application/json',
+                    dataType:'',
+                    data:{txt:'1'},
+                    xhrFields: {
+                        responseType: "arraybuffer",
+                    },
+                    success: function(res,_,xhr) {
+                        let [, fileName] = xhr
+                        .getResponseHeader("Content-Disposition")
+                        .match(/filename=(.*)$/);
+                        let blob = new Blob([res], {
+                        type: "application/vnd.ms-txt",
+                        });
+                        let link = document.createElement("a");
+                        link.href = window.URL.createObjectURL(blob);
+                        link.download = fileName;
+                        link.click();
+                        window.URL.revokeObjectURL(link.href);
                     },
                     error: function(data) {
                         $tips.text('未知错误');

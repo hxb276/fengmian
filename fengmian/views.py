@@ -9,10 +9,15 @@ import time
 import datetime
 from hashlib import md5
 import re
+from tkinter import S
 import urllib
-from django import views
 
-from django.http import HttpResponse,HttpResponseRedirect,JsonResponse,HttpResponseForbidden
+from django.conf import settings
+from django.http import (HttpResponse,
+                        HttpResponseRedirect,
+                        JsonResponse,
+                        HttpResponseForbidden,
+                        FileResponse)
 from django.shortcuts import render
 from django.views.generic import View
 
@@ -248,14 +253,21 @@ class FormatXuliehao(View):
 
         if request.headers.get('Content-Type',None) == 'application/json':
             fstr = request.GET.get('s',None)
+            txt = request.GET.get('txt',None)
+            print(fstr,txt)
             if fstr:
-                
+                print(fstr)
                 new_str = self.format_str(fstr)
                 if new_str:
+                    self.save_txt(new_str)
                     return JsonResponse({'code':1,'msg':'success','data':new_str})
                 else:
                     return JsonResponse({'code':1,'msg':'success','data':'未知错误'})
-
+            elif txt:
+                print(txt)
+                response = FileResponse(open('uploads/fengmian.txt','rb'))
+                response['Content-Disposition'] = 'attachment; filename="xuliehao.txt"'
+                return response
             else:
                 return JsonResponse({'code':-1,'msg':'err'})
 
@@ -266,7 +278,10 @@ class FormatXuliehao(View):
         new_str = ''
         str_lst = s.split('\n')
         for item in str_lst:
-            item = item if '：' not in item else item.split('：')[1]
+            if '：' in item:
+                item = item.split('：')[1]
+            elif ':' in item:
+                item = item.split(':')[1]
             try:
                 s = re.search(r'[A-z0-9]+',item)[0] + '\n'
             except:
@@ -274,6 +289,11 @@ class FormatXuliehao(View):
             else:
                 new_str += s
         return new_str
+
+    def save_txt(self,s):
+        
+        with open('uploads/fengmian.txt','w',encoding='utf8') as f:
+            f.write(s)
 
 if __name__ == '__main__':
     ad = AdCityView()
