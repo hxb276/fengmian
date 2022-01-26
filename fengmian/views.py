@@ -246,7 +246,7 @@ class FormatXuliehao(View):
 
     def get(self,request):
 
-        if request.headers['Content-Type'] == 'application/json':
+        if request.headers.get('Content-Type',None) == 'application/json':
             fstr = request.GET.get('s',None)
             if fstr:
                 
@@ -266,6 +266,7 @@ class FormatXuliehao(View):
         new_str = ''
         str_lst = s.split('\n')
         for item in str_lst:
+            item = item if '：' not in item else item.split('：')[1]
             try:
                 s = re.search(r'[A-z0-9]+',item)[0] + '\n'
             except:
