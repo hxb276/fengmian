@@ -20,6 +20,7 @@ from django.http import (HttpResponse,
                         FileResponse)
 from django.shortcuts import render
 from django.views.generic import View
+from pymysql import Binary
 
 import requests
 
@@ -254,17 +255,14 @@ class FormatXuliehao(View):
         if request.headers.get('Content-Type',None) == 'application/json':
             fstr = request.GET.get('s',None)
             txt = request.GET.get('txt',None)
-            print(fstr,txt)
             if fstr:
-                print(fstr)
                 new_str = self.format_str(fstr)
                 if new_str:
                     self.save_txt(new_str)
                     return JsonResponse({'code':1,'msg':'success','data':new_str})
                 else:
                     return JsonResponse({'code':1,'msg':'success','data':'未知错误'})
-            elif txt:
-                print(txt)
+            elif txt: 
                 response = FileResponse(open('uploads/fengmian.txt','rb'))
                 response['Content-Disposition'] = 'attachment; filename="xuliehao.txt"'
                 return response

@@ -38,13 +38,23 @@
 
 
         }
+        .downtips {
+            margin: .5rem 0;
+            background-color: rgba(2, 25, 25, .3);
+            color: #fff;
+            padding: .5rem 0;
+        }
+        .downtips span {
+            color: rgb(137, 252, 7);
+            font-weight: 900;
+        }
         .tips {
             color: #f00;
             text-align: center;
         }
         .text textarea {
             width: 80%;
-            min-height: 30rem;
+            min-height: 25rem;
         }
     </style>
 </head>
@@ -55,6 +65,7 @@
             <input type="button" value="复制" id="copy">
             <input type="button" value="导出txt" id="txt">
         </div>
+        <p class="downtips"><span>导出功能：</span>必须先整理，否则可能出错!!!</p>
         <p class="tips">请将序列号粘贴在下方...</p>
         <div class="text">
             <textarea id="texta"></textarea>
