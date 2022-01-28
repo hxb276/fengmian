@@ -1,0 +1,21 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'fengmian/css/bootstrap.css' %}">
+    <title>{% block title %}{% endblock %}</title>
+    {% block style %}{% endblock %}
+</head>
+<body>
+    {% block nav %} {% endblock %}
+
+    <div class="container fluid">{% block container %}{% endblock %}</div>
+    
+    <script src="{% static 'fengmian/js/jquery-3.3.1.min.js' %}"></script>
+    <script src="{% static 'fengmian/js/index.min.js' %}"></script>
+    {% block script %}{% endblock %}
+</body>
+</html>

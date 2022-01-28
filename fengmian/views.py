@@ -9,22 +9,21 @@ import time
 import datetime
 from hashlib import md5
 import re
-from tkinter import S
 import urllib
 
 from django.conf import settings
+from django.forms.models import model_to_dict
 from django.http import (HttpResponse,
                         HttpResponseRedirect,
                         JsonResponse,
                         HttpResponseForbidden,
-                        FileResponse)
+                        FileResponse, cookie)
 from django.shortcuts import render
 from django.views.generic import View
-from pymysql import Binary
 
 import requests
 
-from fengmian.models import MyUser,AdCity
+from fengmian.models import MyUser,AdCity,PddUser,PddVideo,AllowedRgisterUser
 from fengmian.utils import get_ip,get_ua
 # Create your views here.
 
@@ -165,34 +164,44 @@ class AdCityView(View):
 class PddVideoview(View):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
+        self.salt = 'ddsp'
 
     def get(self,request):
-        
+        ip = get_ip(request)
+        ua = get_ua(request)
+        # ajax请求
         if request.headers.get('Content-Type',None) == 'application/json':
             url = request.GET.get('ou',None)
-            qq_number = request.GET.get('qid',None)
+            uid = request.GET.get('qid',None)
 
             if url:
-                url_ok = self.__verity_url(url)
-                if not url_ok:
-                    return JsonResponse({'code':-1,'msg':'params err'})
-                video_info = self.__get_video_url(url)
-                return JsonResponse(video_info,safe=False)
-            # 第一次验证qq号
-            elif qq_number:
-                ua = get_ua(request)
-                res = JsonResponse({'code':1,'msg':'success'})
-                res.set_signed_cookie('uid',str(qq_number),salt='ddsp')
-                res.set_signed_cookie('ua',ua,salt='ddsp')
-                return res
+                cookie_uid = request.get_signed_cookie('uid',salt=self.salt)
+                # 更新每日限定的下载次数
+                self.__update_downtimes()
+                return self.__ajax_url(url,cookie_uid)
+            # 验证qq号
+            elif uid:
+                return self.__ajax_register(uid,ua,ip)
             else:
                 return HttpResponseForbidden()
+        # html请求
         else:
-            print(request.META.get('QUERY_STRING',None))
-            ua = get_ua(request)
-            print(ua)
-            return render(request,'fengmian/pdd-video.html')
-
+            login = False # 登录标志，默认未登录
+            try:
+                uid = request.get_signed_cookie('uid',salt=self.salt)
+                cua = request.get_signed_cookie('ua',salt=self.salt)
+            except:
+                pass
+            else:
+                u_info = PddUser.objects.filter(uid=uid)
+                # 判断当前登录设备是否是常用设备
+                if u_info.exists() and (u_info[0].ua1 == cua or u_info[0].ua2 == cua):
+                    login = True
+                    down_times = u_info[0].down_times
+                    data = PddVideo.objects.all().order_by('down_time')[:10]
+                    return render(request,'fengmian/pdd-video.html',{'login':login,'uid':uid,'times':down_times,'data':data})
+                
+            return render(request,'fengmian/pdd-video.html',{'login':login})
 
     def __get_video_url(self,url):
         headers = {
@@ -231,20 +240,144 @@ class PddVideoview(View):
         play_url = re.findall(r'play_url=(.*?)&',data)
         first_frame_url = re.findall(r'"firstFrameUrl":"(.*?jpeg)',data)[1]
         info = re.findall(r'<p .*?>(.*?)</p>',data)
-        print(info)
-        author = info[0]
-        likes = info[1]
-        comments = info[2]
-        v_url = urllib.parse.unquote(play_url[0])
-        img_url= first_frame_url.encode('utf8').decode('unicode-escape')
+        publish_time = re.findall(r'(\d+-\d+-\d+)',play_url[0])
 
-        return [author,likes,comments,v_url,img_url]
+        data = {
+            'url':urllib.parse.unquote(play_url[0]),
+            'feed_id':'',
+            'goods_id':'',
+            'likes':info[1],
+            'comments':info[2],
+            'publish_time':publish_time[0],
+            'img_url':first_frame_url.encode('utf8').decode('unicode-escape')
+        }
+
+        return data
 
     def __verity_url(self,url):
         '''
         简单验证url是否合法
         '''
-        return 'goods_id' in url.split('&')
+        status = False
+        if 'feed_id' in url and 'goods_id' in url:
+            feed_id = re.findall(r'feed_id=(.*?)&',url)[0]
+            goods_id = re.findall(r'goods_id=(.*?)&',url)[0]
+            status = True # 合法
+        
+        return feed_id,goods_id,status
+
+    def __ajax_url(self,url,cookie_uid):
+        '''
+        解析视频url，返回视频的详细信息
+        '''
+
+        feed_id,goods_id,url_ok = self.__verity_url(url)
+        
+        if not url_ok:
+            return JsonResponse({'code':-1,'msg':'params err'})
+       
+        user_info = PddUser.objects.filter(uid=cookie_uid)
+        down_times = user_info[0].down_times
+        # 下载次数用完
+        if down_times == 0:
+            return JsonResponse({'code':-2,'msg':'down_times err'})
+        
+        local_feed = PddVideo.objects.filter(feed_id=feed_id)
+        # 判断视频是否在数据库中存在，存在则直接返回
+        if local_feed.exists():
+            video_info = model_to_dict(local_feed[0])
+            video_info.pop('feed_id')
+            video_info.pop('id')
+            return JsonResponse({'code':0,'msg':'success','data':video_info})
+        else:
+            video_info = self.__get_video_url(url)
+            
+            url,_,_,likes,comments,published,_ = list(video_info.values())
+            published = datetime.datetime.strptime(published,'%Y-%m-%d')
+            # 保存用户查询，用于展示和减少查询次数
+            PddVideo.objects.create(url=url,feed_id=feed_id,
+                                    goods_id=goods_id,likes=likes,
+                                    comments=comments,publish_time=published)
+            # 更新（减少）下载次数
+            down_times = down_times - 1 if down_times > 0 else 0
+            user_info.update(down_times=down_times)
+            video_info.update({'goods_id':goods_id})
+            video_info.pop('feed_id')
+            
+            return JsonResponse({'code':0,'msg':'success','data':video_info})
+
+    def __ajax_register(self,uid,ua,ip):
+        '''
+        验证账号或者注册
+        '''
+        u_info = PddUser.objects.filter(uid=uid)
+        u_allowed = AllowedRgisterUser.objects.filter(uid=uid)
+        is_exists = u_info.exists()
+        is_allowed = u_allowed.exists()
+        data = {'code':1,'msg':'success'}
+
+        res = JsonResponse(data)
+        res.set_signed_cookie('uid',str(uid),salt=self.salt)
+        res.set_signed_cookie('ua',ua,salt=self.salt)
+
+        # 首次使用，直接注册
+        if not is_exists and is_allowed:
+            PddUser.objects.create(uid=uid,ip=ip,ua1=ua)
+        # 已经注册，但是在新设备登录，更新新设备
+        elif is_exists and not u_info[0].ua2 and u_info[0].ua1 != ua:
+            u_info.update(ua2=ua)
+        # cookie 过期或清除了缓存
+        elif is_exists and (u_info[0].ua1 == ua or u_info[0].ua2 == ua):
+            return res
+        # 没有注册资格
+        elif not is_allowed:
+            data.update({'code':-1,'msg':'not allowed!'})
+            return JsonResponse(data)
+        else:
+            data.update({'code':-2,'msg':'equipment error'})
+            return JsonResponse(data)
+        return res
+
+    def __update_downtimes(self):
+        '''
+        更新每日下载限定次数
+        '''
+        today = datetime.datetime.now().strftime('%d')
+        all_user = PddUser.objects.all()
+        if all_user.exists() and all_user[0].update_time != today:
+            all_user.update(down_times=5,update_time=today)
+
+class AddUserView(View):
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+
+    def get(self,request):
+        if request.headers['Content-Type'] == 'application/json':
+            uid = request.GET.get('uid',None)
+            add_list = request.GET.get('list',None)
+            del_user = request.GET.get('delnum',None)
+            # 添加单个用户
+            if uid:
+                AllowedRgisterUser.objects.create(uid=uid)
+            # 批量添加用户名单
+            elif add_list and add_list == 'huahua':
+                objects = self.__get_qqs()
+                AllowedRgisterUser.objects.bulk_create(objects)
+            # 删除用户
+            elif del_user:
+                AllowedRgisterUser.objects.filter(uid=del_user).delete()
+            else:
+                return JsonResponse({'code':-1,'msg':'error'})
+            return JsonResponse({'code':1,'msg':'success'})
+                
+        return render(request,'fengmian/add-pdd-user.html')
+
+    def __get_qqs(self):
+        with open('uploads/qq.json','r',encoding='utf8') as f:
+            data = json.loads(f.read())
+        qq_list = data['data']
+        objects = [AllowedRgisterUser(uid=qq) for qq in qq_list]
+        return objects
 
 class FormatXuliehao(View):
     def __init__(self, **kwargs) -> None:

@@ -1,0 +1,35 @@
+{% extends "fengmian/base.html" %}
+
+{% block title %} USER MANAGER {% endblock %}
+{% block style %}
+<style>
+    body {
+        background-color: lightcyan;
+    }
+    .container {
+        text-align: center;
+    }
+    .add-tips {
+        display: block;
+        color: #f80;
+    }
+</style>
+{% endblock %}
+
+{% block container %}
+<div class="add mb-3">
+    <input type="text" name="uid" id="addUid">
+    <input type="button" value="addone" id="add" class="btn btn-primary">
+    <span class="add-tips"></span>
+</div>
+<div class="add-list mb-3">
+    <input type="text" name="list" id="addList">
+    <input type="button" value="addAll" id="addAll" class="btn btn-info">
+    <span class="add-tips"></span>
+</div>
+<div class="del">
+    <input type="text" name="delnum" id="deluid">
+    <input type="button" value="del" id="del" class="btn btn-danger">
+    <span class="add-tips"></span>
+</div>
+{% endblock %}

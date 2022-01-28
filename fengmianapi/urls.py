@@ -24,6 +24,7 @@ urlpatterns = [
     path(r'fengmian/',views.IndexView.as_view(),name='index'),
     path(r'cityad/',AdCityView.as_view(),name='ad'),
     path(r'pdd-video/',views.PddVideoview.as_view(),name='pdd'),
-    path(r'xuliehao/',views.FormatXuliehao.as_view(),name='format')
+    path(r'xuliehao/',views.FormatXuliehao.as_view(),name='format'),
+    path(r'userchange/',views.AddUserView.as_view(),name='userchange')
 
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

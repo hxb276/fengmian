@@ -1,5 +1,6 @@
 migrations/*
 doc.md
+fengmian/static/fengmian/index.js
 *.rar
 *.sqlite3
 *.xls

@@ -1,60 +1,94 @@
+{% extends "fengmian/base.html" %}
 {% load static %}
+{% block title %} Parse PDD Video {% endblock %}
+{% block style %}
+<style>
+    body {
+        background-color: lightskyblue;
+    }
+    .tips-none {
+        display: none;
+    }
+    .color-red {
+        display: block;
+        color: #f00;
+        margin-top: .5rem;
+    }
+</style>
+{% endblock %}
+{% block nav %}
+<nav class="navbar navbar-light bg-light">
+    <a href="#" class="navbar-brand h1">
+        <img src="{% static 'fengmian/imgs/pdd.jpeg' %}" width="30px" height="30px" class="d-inline-block align-top">
+        多多视频解析
+    </a>
+</nav>
+{% endblock %}
+{% block container %}
+<div class="user bg-light text-dark mb-3 mt-3 p-2 ">
+    <span class="uname mr-5">当前账号 <i class="text-danger">{{ uid }}</i></span>
+    <span class="remain">当天可用次数 <i class="text-danger">{{ times }}</i> </span>
+</div>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Parse PDD Video</title>
-    <style>
-        .tips-none {
-            display: none;
-        }
-        .color-red {
-            display: block;
-            color: #f00;
-            margin-top: .5rem;
-        }
-    </style>
-</head>
-<body>
-    <div class="continer">
-        <h2>多多视频解析</h2>
-        <p class="user">
-            <span class="uname"></span>
-            <span class="remain"> </span>
-        </p>
-        <p class="verity-user">
-            <input type="text" name="qid" id="qid">
-            <input type="button" value="提交" id="qsubmit">
-            <span class="tips-none "></span>
-        </p>
-        <div class="form">
-            <form action="" method="get">
-                {% csrf_token %}
-                <input type="text" name="ou" id="origin_url">
-                <input type="submit" value="解析" id="submit">
-            </form>
-        </div>
-        <div class="history">
-            <h3>最新数据</h3>
-            <table>
-                <tr>
-                    <th>1</th>
-                    <th>2</th>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td></td>
-                </tr>
-            </table>
-        </div>
+{% if not login %}
+<p class="verity-user">
+    <input type="text" name="qid" id="qid">
+    <input type="button" value="提交" id="qsubmit">
+    <span class="tips-none"></span>
+</p>
+{% endif %}
+{% if login %}
+<div class="form row no-gutters">
+    {% csrf_token %}
+    <input type="text" name="ou" id="origin_url" placeholder="请粘贴链接">
+    <input type="submit" value="解析" id="submit" class="btn btn-primary ml-2">
+    <span class="tips-none"></span>
+</div>
+<div class="result mt-3">
+    <h5 class="text-center">作品详情</h5>
+    <span class="tips d-none text-danger">解析中，请稍后...</span>
+    <table class="table table-sm table-bordered"></table>
+</div>
+{% if data %}
+<div class="history">
+    <h5  class="text-center">最新数据</h5>
+    <table class="table table-sm table-bordered">
+        <tr>
+            <th>下载地址</th>
+            <th>商品id</th>
+            <th>点赞数</th>
+            <th>评论数</th>
+            <th>发布日期</th>
+            
+        </tr>
+        <tbody class="table-striped">
+            {% for item in data %}
+            <tr>
+                <td class="col-3"><a href="{{ item.url }}" target="_blank">下载</a></td>
+                <td class="col-2">{{ item.goods_id }}</td>
+                <td class="col-2">{{ item.likes }}</td>
+                <td class="col-3">{{ item.comments }}</td>
+                <td class="col-2">{{ item.publish_time|date:'Y-n-j' }}</td>   
+            </tr>
+            {% empty %}
+            <p>当前还没有数据</p>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+{% else %}
+<span class="color-red">请验证账号</span>
+<div class="card mt-3">
+    <div class="card-body">
+        <h5 class="card-title">使用说明</h5>
+        <p class="card-text text-info">目前仅供QQ群内成员免费使用。</p>
+        <p class="card-text text-danger">获取链接：多多视频分享视频到QQ、微信,打开分享的链接，复制视频链接</p>
+        <p class="card-text text-success">由于不可抗力因素，目前每天使用次数只有5次，正在测试增加</p>
+        <h5 class="card-title">提示notallowed!</h5>
+        <p class="card-text text-info">新入群的成员信息没有同步，所以没有权限，可联系管理添加</p>
+        <p class="card-text text-info">QQ是手工添加，可能有遗漏，所以没有权限，可联系管理添加</p>
     </div>
-    <script src="{% static 'fengmian/js/jquery-3.3.1.min.js' %}"></script>
-    <script src="{% static 'fengmian/js/index.js' %}"></script>
-</body>
-</html>
+</div>
+{% endif %}
+{% endblock %}
