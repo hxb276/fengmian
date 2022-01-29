@@ -61,11 +61,15 @@
 <body>
     <div class="container">
         <div class="btn">
+            <form action="" method="post">
+            {% csrf_token %}
             <input type="button" value="整理" id="format">
             <input type="button" value="复制" id="copy">
             <input type="button" value="导出txt" id="txt">
+            <a onfocus="this.blur();" download="xuliehao.txt" id="createInvote" class=" hide" ></a>
+            </form>
         </div>
-        <p class="downtips"><span>导出功能：</span>必须先整理，否则可能出错!!!</p>
+        <p class="downtips"><span>导出功能：</span>已优化，可直接导出，支持1000+数据</p>
         <p class="tips">请将序列号粘贴在下方...</p>
         <div class="text">
             <textarea id="texta"></textarea>
@@ -73,7 +77,6 @@
     </div>
     <script src="{% static 'fengmian/js/jquery-3.3.1.min.js' %}"></script>
     <script>
-
         $(function() {
             let $copy = $('#copy'),
                 $format = $('#format'),
@@ -86,52 +89,46 @@
                 document.execCommand("Copy");
                 $tips.text('复制成功')
             };
+            function getNewStr() {
 
-            $format.click(function() {
-                $.ajax({
-                    type:'get',
-                    url:'/xuliehao/',
-                    contentType:'application/json',
-                    dataType:'json',
-                    data:{s:$texta.val()},
-                    success: function(data) {
-                        $tips.text('格式化成功，请复制');
-                        $texta.val(data.data)
-                    },
-                    error: function(data) {
-                        $tips.text('未知错误');
+                let value = $texta.val();
+                let valueArr = '';
+                let newStr = ''
+                if (value.indexOf(':') != -1 && value.indexOf('\n') != -1) {
+                    valueArr = value.split(':')
+                }else if (value.indexOf('\n') != -1) {
+                    valueArr = value.split('\n')
+                }else {
+                    valueArr = ''
+                }
+                for (i in valueArr) {
+                    if (valueArr[i] != '') {
+                        newStr += valueArr[i].match(/[A-z0-9]+/)[0] + '\r\n'
                     }
-                },
-                )
+                }
+                return newStr
+            }
+            $format.click(()=> {
+                let newStr = getNewStr();
+                $texta.val(newStr);
+                $tips.text('格式化成功，请复制');
             })
             $txt.click(function() {
-                $.ajax({
-                    type:'get',
-                    url:'/xuliehao/',
-                    contentType:'application/json',
-                    dataType:'',
-                    data:{txt:'1'},
-                    xhrFields: {
-                        responseType: "arraybuffer",
-                    },
-                    success: function(res,_,xhr) {
-                        let [, fileName] = xhr
-                        .getResponseHeader("Content-Disposition")
-                        .match(/filename=(.*)$/);
-                        let blob = new Blob([res], {
-                        type: "application/vnd.ms-txt",
-                        });
-                        let link = document.createElement("a");
-                        link.href = window.URL.createObjectURL(blob);
-                        link.download = fileName;
-                        link.click();
-                        window.URL.revokeObjectURL(link.href);
-                    },
-                    error: function(data) {
-                        $tips.text('未知错误');
-                    }
-                },
-                )
+                let newStr = getNewStr()
+                var isIE = (navigator.userAgent.indexOf('MSIE') >= 0);
+                if (isIE) {
+                    var strHTML = newStr;
+                    var winSave = window.open();
+                    winSave.document.open("text","utf-8");
+                    winSave.document.write(strHTML);
+                    winSave.document.execCommand("SaveAs",true,"xuliehao.txt");
+                    winSave.close();
+                } else {
+                    var elHtml = newStr;
+                    var mimeType =  'text/plain';
+                    $('#createInvote').attr('href', 'data:' + mimeType  +  ';charset=utf-8,' + encodeURIComponent(elHtml));
+                    document.getElementById('createInvote').click();
+                }
             })
 
             $copy.click(()=>{copy()});

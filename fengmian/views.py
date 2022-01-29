@@ -17,7 +17,7 @@ from django.http import (HttpResponse,
                         HttpResponseRedirect,
                         JsonResponse,
                         HttpResponseForbidden,
-                        FileResponse, cookie)
+                        FileResponse)
 from django.shortcuts import render
 from django.views.generic import View
 
@@ -238,7 +238,7 @@ class PddVideoview(View):
         data = res.text
 
         play_url = re.findall(r'play_url=(.*?)&',data)
-        first_frame_url = re.findall(r'"firstFrameUrl":"(.*?jpeg)',data)[1]
+        first_frame_url = re.findall(r'(http.*?jpeg)',data)[1]
         info = re.findall(r'<p .*?>(.*?)</p>',data)
         publish_time = re.findall(r'(\d+-\d+-\d+)',play_url[0])
 
@@ -352,7 +352,7 @@ class AddUserView(View):
         super().__init__(**kwargs)
 
     def get(self,request):
-        if request.headers['Content-Type'] == 'application/json':
+        if request.headers.get('Content-Type',None) == 'application/json':
             uid = request.GET.get('uid',None)
             add_list = request.GET.get('list',None)
             del_user = request.GET.get('delnum',None)
@@ -385,9 +385,13 @@ class FormatXuliehao(View):
 
     def get(self,request):
 
+
+        return render(request,'fengmian/re.html')
+
+    def post(self,request):
         if request.headers.get('Content-Type',None) == 'application/json':
-            fstr = request.GET.get('s',None)
-            txt = request.GET.get('txt',None)
+            fstr = request.POST.get('s',None)
+            txt = request.POST.get('txt',None)
             if fstr:
                 new_str = self.format_str(fstr)
                 if new_str:
@@ -402,7 +406,6 @@ class FormatXuliehao(View):
             else:
                 return JsonResponse({'code':-1,'msg':'err'})
 
-        return render(request,'fengmian/re.html')
     
     def format_str(self,s):
         '''格式化字符串'''
