@@ -261,7 +261,7 @@ class PddVideoview(View):
         status = False
         if 'feed_id' in url and 'goods_id' in url:
             feed_id = re.findall(r'feed_id=(.*?)&',url)[0]
-            goods_id = re.findall(r'goods_id=(.*?)&',url)[0]
+            goods_id = re.findall(r'goods_id=(\d+)',url)[0]
             status = True # 合法
         
         return feed_id,goods_id,status
@@ -354,23 +354,26 @@ class AddUserView(View):
     def get(self,request):
         if request.headers.get('Content-Type',None) == 'application/json':
             uid = request.GET.get('uid',None)
-            add_list = request.GET.get('list',None)
+            handle_type = request.GET.get('type',None)
             del_user = request.GET.get('delnum',None)
             # 添加单个用户
-            if uid:
+            if uid and handle_type == 'add':
                 AllowedRgisterUser.objects.create(uid=uid)
             # 批量添加用户名单
-            elif add_list and add_list == 'huahua':
+            elif uid == 'huahua' and handle_type == 'addall':
                 objects = self.__get_qqs()
                 AllowedRgisterUser.objects.bulk_create(objects)
             # 删除用户
-            elif del_user:
+            elif uid and handle_type == 'delete':
                 AllowedRgisterUser.objects.filter(uid=del_user).delete()
             else:
                 return JsonResponse({'code':-1,'msg':'error'})
             return JsonResponse({'code':1,'msg':'success'})
-                
-        return render(request,'fengmian/add-pdd-user.html')
+        context = {
+            'usernums':PddUser.objects.all().count(),
+            'videonums':PddVideo.objects.all().count(),
+        }
+        return render(request,'fengmian/add-pdd-user.html',context)
 
     def __get_qqs(self):
         with open('uploads/qq.json','r',encoding='utf8') as f:
@@ -384,7 +387,6 @@ class FormatXuliehao(View):
         super().__init__(**kwargs)
 
     def get(self,request):
-
 
         return render(request,'fengmian/re.html')
 

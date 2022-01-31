@@ -1,4 +1,5 @@
 $(function () {
+    $('.toast').toast('hide');
     const TABLEHEAD = ['下载地址','商品id','点赞数','评论数','发布日期'];
     let $qnumber = $('#qid'),
         $origin_url = $('#origin_url'),
@@ -80,27 +81,20 @@ $(function () {
         }
     };
     // user manage
+    let $uid = $('#addUid'),
+        $tips = $('div.toast-body > p.add-tips');
     var userManage = {
         addUser: function() {
-            let $uid = $('#addUid'),
-                $tips = $uid.siblings('span.add-tips');
-            let $uidValue = $uid.val()
-            tools.userManageAjax($uid,$tips,{'uid':$uidValue})
+            tools.userManageAjax($uid,$tips,{'type':'add'})
         },
         addAllUser: function() {
-            let $allUser= $('#addList'),
-                $tips = $allUser.siblings('span.add-tips');
-            let $allUserValue = $allUser.val();
-            tools.userManageAjax($allUser,$tips,{'list':$allUserValue});
+            tools.userManageAjax($uid,$tips,{'type':'addall'});
         },
         delUser: function() {
-            let $deluid = $('#deluid'),
-                $tips = $deluid.siblings('span.add-tips');
-            let $deluidValue = $deluid.val();
-            tools.userManageAjax($deluid,$tips,{'delnum':$deluidValue})
+            tools.userManageAjax($uid,$tips,{'type':'delete'})
         },
    
-    }
+    };
     var tools = {
         // 检查是否是数字及是否含有空格
         isNumber: function (str) {
@@ -117,13 +111,15 @@ $(function () {
         },
         // 空格及空值检测
         spaceCheck: function (str) {
-            return str != '' && (str.indexOf('') != -1 ? true : false)
+            return str != '' && (str.indexOf(' ') === -1 ? true : false)
         },
         userManageAjax: function(valdom,tipdom,params){
             if (!tools.spaceCheck(valdom.val())) {
                 tipdom.text('请检查!!!');
+                $('.toast').toast('show');
                 valdom.val('');
             } else {
+                params['uid'] = valdom.val()
                 $.ajax({
                     type: 'get',
                     url: '/userchange/',
@@ -131,15 +127,15 @@ $(function () {
                     dataType: 'json',
                     contentType: 'application/json',
                     success: function (data) {
-                        tipdom.text(data.msg)
-                        valdom.val('')
+                        tipdom.text(data.msg);
+                        $('.toast').toast('show');
+                        valdom.val('');
                     }
                 })
             }
         },
     }
 
-    // $qnumber.change(() => { tools.isNumber() });
     // user mange
     $addUserSubmit.click(() => { userManage.addUser() });
     $addAll.click(()=>{ userManage.addAllUser() })
@@ -147,6 +143,5 @@ $(function () {
     // end
     $submit.click(() => { getUrl() });
     $qsubmit.click(()=>{ register() });
-
 
 })

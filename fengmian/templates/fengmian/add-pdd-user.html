@@ -17,19 +17,41 @@
 {% endblock %}
 
 {% block container %}
-<div class="add mb-3">
-    <input type="text" name="uid" id="addUid">
-    <input type="button" value="addone" id="add" class="btn btn-primary">
-    <span class="add-tips"></span>
+<div class="userhandle mt-5">
+    <div class="add mb-3 btn-toolbar">
+        <div class="input-group mr-5 mb-2">
+            <input type="text" name="uid" id="addUid" class="form-control" placeholder="Enter text">
+        </div>
+        <div class="btn-group">
+            <input type="button" value="addone" id="add" class="btn btn-primary">
+            <input type="button" value="addall" id="addAll" class="btn btn-info">
+            <input type="button" value="delete" id="del" class="btn btn-secondary">
+        </div>
+    </div>
+    <div role="alert" aria-live="assertive" aria-atomic="true" class="toast" data-autohide="false">
+        <div class="toast-header">
+          <strong class="mr-auto">TIPS</strong>
+          <small>11 mins ago</small>
+          <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="toast-body">
+          <p class="add-tips"></p>
+        </div>
+      </div>
 </div>
-<div class="add-list mb-3">
-    <input type="text" name="list" id="addList">
-    <input type="button" value="addAll" id="addAll" class="btn btn-info">
-    <span class="add-tips"></span>
-</div>
-<div class="del">
-    <input type="text" name="delnum" id="deluid">
-    <input type="button" value="del" id="del" class="btn btn-danger">
-    <span class="add-tips"></span>
+<div class="show-userinfo">
+    <div class="pdd-info">
+        <div class="card">
+            <div class="card-head">
+                <p class="h5">多多视频详情</p>
+            </div>
+            <div class="card-body">
+                <p class="text-info">当前使用人数<span class="text-danger">{{ usernums }}</span></p>
+                <p class="text-info">当前视频总数<span class="text-danger">{{ videonums }}</span></p>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

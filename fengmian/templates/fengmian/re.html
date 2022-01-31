@@ -49,7 +49,7 @@
             font-weight: 900;
         }
         .tips {
-            color: #f00;
+            color: #fff;
             text-align: center;
         }
         .text textarea {
@@ -91,7 +91,7 @@
             };
             function getNewStr() {
 
-                let value = $texta.val();
+                let value = $texta.val().replaceAll('：',':');
                 let valueArr = '';
                 let newStr = ''
                 if (value.indexOf(':') != -1 && value.indexOf('\n') != -1) {
@@ -106,12 +106,12 @@
                         newStr += valueArr[i].match(/[A-z0-9]+/)[0] + '\r\n'
                     }
                 }
-                return newStr
+                return [newStr,valueArr.length]
             }
             $format.click(()=> {
-                let newStr = getNewStr();
+                let [newStr,nums] = getNewStr();
                 $texta.val(newStr);
-                $tips.text('格式化成功，请复制');
+                $tips.text(`格式化成功，请复制\n总数：${nums + ''}`);
             })
             $txt.click(function() {
                 let newStr = getNewStr()
